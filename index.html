@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -25,6 +24,7 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 .product-name{font-size:1.05rem;font-weight:800;color:#3c2a56;min-height:44px;line-height:1.25;}
 .product-desc{font-size:.87rem;color:#555;min-height:38px;line-height:1.35;}
 .product-price{color:var(--pri);font-size:1.1rem;font-weight:800;}
+.delivery-charge{color:#15803d;font-weight:700;}
 .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 .btn{padding:11px 16px;border-radius:12px;font-weight:800;font-size:.98rem;cursor:pointer;flex:1;display:flex;align-items:center;justify-content:center;gap:6px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25);border:none;transition:.2s transform;}
 .btn:active{transform:translateY(1px);}
@@ -45,206 +45,216 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 #closeCartBtn:hover{background:var(--red-dark);}
 #toast{position:fixed;top:20px;right:20px;background:var(--blue);color:#fff;padding:14px 18px;border-radius:12px;font-weight:800;font-size:.98rem;opacity:0;pointer-events:none;transform:translateY(-20px);z-index:10000;box-shadow:0 8px 22px rgba(0,0,0,.18);}
 #toast.show{opacity:1;transform:translateY(0);}
-#loginFormContainer{background:#fff;padding:20px;border-radius:16px;box-shadow:0 8px 25px rgba(0,0,0,.15);margin-bottom:20px;}
-#loginFormContainer input{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:2px solid var(--pri);}
-#loginFormContainer button{width:100%;padding:12px;border:none;border-radius:12px;background:var(--pri);color:#fff;font-weight:700;margin-top:10px;cursor:pointer;}
-#loginFormContainer button:hover{background:var(--pri-dark);}
 </style>
 </head>
 <body>
-
 <h1>Shopick</h1>
 <img src="shopick-logo.png" alt="Shopick Logo" class="shopick-logo">
-
-<div id="loginFormContainer">
-<h3>Admin Login</h3>
-<input type="email" id="adminEmail" placeholder="Email">
-<input type="password" id="adminPass" placeholder="Password">
-<button id="adminLoginBtn">Login</button>
-</div>
-
 <div class="container">
-<div id="adminBar"><span class="tag">🔒 Admin Mode</span><button id="toggleAddForm">+ Add New Product</button><button id="logoutBtn" class="btn-ghost">Logout</button></div>
-
+<div id="adminBar"><span class="tag">🔒 Admin Mode</span><button id="toggleAddForm">+ Add/Edit Product</button><button id="logoutBtn" class="btn-ghost">Logout</button></div>
 <div id="adminForm" style="display:none; margin:10px 0 20px; padding:16px; border:2px dashed #e6d7fa; border-radius:16px; background:#faf7ff;">
 <form id="addProductForm" autocomplete="off">
 <input type="text" id="productName" placeholder="Product Name" required><br><br>
 <input type="number" id="productPrice" placeholder="Price" min="1" required><br><br>
 <textarea id="productDesc" placeholder="Description" rows="4" required></textarea><br><br>
-<input type="file" id="productImages" accept="image/*" multiple><br><br>
-<button type="submit" class="btn btn-green" style="width:100%;">Add Product</button>
+<input type="file" id="productImages" accept="image/*" multiple required><br><br>
+<button type="submit" class="btn btn-green" style="width:100%">Add / Update Product</button>
 </form>
 </div>
-
 <input type="text" id="searchBox" placeholder="Search product by name...">
 <div class="products-grid" id="productsGrid"></div>
 </div>
-
 <button id="cartBtn">🛒 <div id="cartCount">0</div></button>
 <div id="cartPanel">
 <h2>Your Cart</h2>
 <div id="cartItems"></div>
-<div id="cartTotal">Total: Rs 0</div>
+<div id="cartTotal">Total: Rs 0 + Delivery: Rs 50</div>
 <button id="closeCartBtn">Close Cart</button>
 </div>
-
 <div id="toast"></div>
-
+<button id="adminLoginBtn" class="btn btn-blue" style="position:fixed; top:90px; right:20px; z-index:10000;">Admin Login</button>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBzACfUbTk5cakaIx5RChdGZOc2J8rg_9U",
-  authDomain: "shopick-admin.firebaseapp.com",
-  projectId: "shopick-admin",
-  storageBucket: "shopick-admin.appspot.com",
-  messagingSenderId: "567178958366",
-  appId: "1:567178958366:web:XXX"
-};
-
+const firebaseConfig = {apiKey:"XXX",authDomain:"XXX",projectId:"shopick-admin",storageBucket:"XXX",messagingSenderId:"XXX",appId:"XXX"};
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app);
 
 let currentUser = null;
-let cart = [];
+const deliveryCharge = 50;
 
-// Toast
-function showToast(msg){ const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>{t.classList.remove('show');},2000);}
 
-// Admin login
-document.getElementById('adminLoginBtn').addEventListener('click',async ()=>{
-  const email=document.getElementById('adminEmail').value;
-  const pass=document.getElementById('adminPass').value;
+// Admin login with prompt
+const adminLoginBtn = document.getElementById('adminLoginBtn');
+adminLoginBtn.onclick = async ()=>{
+  const email = prompt('Enter admin email:');
+  const password = prompt('Enter admin password:');
   try{
-    const userCred=await signInWithEmailAndPassword(auth,email,pass);
-    currentUser=userCred.user;
-    document.getElementById('loginFormContainer').style.display='none';
+    const userCred = await signInWithEmailAndPassword(auth,email,password);
+    currentUser = userCred.user;
     document.getElementById('adminBar').style.display='flex';
     document.getElementById('adminForm').style.display='block';
     showToast('Admin logged in');
     fetchProducts();
-  }catch(err){console.error(err); showToast('Login failed');}
-});
+  }catch(err){showToast('Login failed');}
+};
 
-// Logout
-document.getElementById('logoutBtn').addEventListener('click',async ()=>{
+document.getElementById('logoutBtn').onclick = async ()=>{
   await signOut(auth);
-  currentUser=null;
-  document.getElementById('loginFormContainer').style.display='block';
+  currentUser = null;
   document.getElementById('adminBar').style.display='none';
   document.getElementById('adminForm').style.display='none';
   showToast('Admin logged out');
-  fetchProducts();
-});
+};
 
-// Toggle add form
-document.getElementById('toggleAddForm').addEventListener('click',()=>{
-  const f=document.getElementById('adminForm');
-  f.style.display=f.style.display==='none'?'block':'none';
-});
-
-// Add product
-document.getElementById('addProductForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const name=document.getElementById('productName').value;
-  const price=parseInt(document.getElementById('productPrice').value);
-  const desc=document.getElementById('productDesc').value;
-  const files=document.getElementById('productImages').files;
-
-  const imgURLs=[];
-  for(let i=0;i<files.length;i++){
-    const imgRef=ref(storage,`products/${Date.now()}_${files[i].name}`);
-    await uploadBytes(imgRef,files[i]);
-    const url=await getDownloadURL(imgRef);
-    imgURLs.push(url);
-  }
-
-  await addDoc(collection(db,'products'),{name,price,desc,imgs:imgURLs});
-  showToast('Product added');
-  document.getElementById('addProductForm').reset();
-  fetchProducts();
-});
-
-// Fetch products
+// Fetch and show products
 async function fetchProducts(){
-  const grid=document.getElementById('productsGrid');
-  grid.innerHTML='';
-  const snapshot=await getDocs(collection(db,'products'));
+  const productsGrid = document.getElementById('productsGrid');
+  productsGrid.innerHTML='';
+  const q = query(collection(db,'products'));
+  const snapshot = await getDocs(q);
   snapshot.forEach(docSnap=>{
-    const data=docSnap.data();
-    const card=document.createElement('div'); card.className='product-card';
-    const img=data.imgs&&data.imgs.length?data.imgs[0]:'';
-    card.innerHTML=`
-      <img src="${img}" class="product-img">
-      <div class="product-info">
-        <div class="product-name">${data.name}</div>
-        <div class="product-desc">${data.desc}</div>
-        <div class="product-price">Rs ${data.price}</div>
-      </div>
-      <div class="btns"><button class="btn btn-blue buyBtn">Buy Now</button></div>
-    `;
-    // Admin buttons
+    const data = docSnap.data();
+    const card = document.createElement('div');
+    card.className='product-card';
+    const imgSrc = data.imgs && data.imgs.length ? data.imgs[0]:'';
+    card.innerHTML = `<img src="${imgSrc}" class="product-img"><div class="product-info"><div class="product-name">${data.name}</div><div class="product-desc">${data.desc}</div><div class="product-price">Rs ${data.price}</div><div class='delivery-charge'>Delivery: Rs ${deliveryCharge}</div></div>`;
+
     if(currentUser){
-      const delBtn=document.createElement('button'); delBtn.className='btn btn-red'; delBtn.innerText='Delete';
-      delBtn.onclick=()=>{deleteDoc(doc(db,'products',docSnap.id)).then(()=>fetchProducts());};
-      const editBtn=document.createElement('button'); editBtn.className='btn btn-green'; editBtn.innerText='Edit';
-      editBtn.onclick=()=>{
-        document.getElementById('productName').value=data.name;
-        document.getElementById('productPrice').value=data.price;
-        document.getElementById('productDesc').value=data.desc;
-        document.getElementById('adminForm').style.display='block';
-        showToast('Edit product and submit');
-        document.getElementById('addProductForm').onsubmit=async ev=>{
-          ev.preventDefault();
-          await updateDoc(doc(db,'products',docSnap.id),{
-            name:document.getElementById('productName').value,
-            price:parseInt(document.getElementById('productPrice').value),
-            desc:document.getElementById('productDesc').value
+      const editBtn = document.createElement('button');
+      editBtn.innerText='Edit';
+      editBtn.className='btn btn-blue';
+            editBtn.onclick = () => {
+        // Populate form with existing product data for editing
+        document.getElementById('productName').value = data.name;
+        document.getElementById('productPrice').value = data.price;
+        document.getElementById('productDesc').value = data.desc;
+        document.getElementById('adminForm').style.display = 'block';
+
+        // When admin submits, update the product
+        const addForm = document.getElementById('addProductForm');
+        addForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const updatedName = document.getElementById('productName').value;
+          const updatedPrice = parseInt(document.getElementById('productPrice').value);
+          const updatedDesc = document.getElementById('productDesc').value;
+          await updateDoc(doc(db, 'products', docSnap.id), {
+            name: updatedName,
+            price: updatedPrice,
+            desc: updatedDesc
           });
-          showToast('Product updated');
-          document.getElementById('addProductForm').reset();
+          showToast(`${updatedName} updated successfully`);
+          addForm.reset();
           fetchProducts();
         };
       };
-      card.querySelector('.btns').appendChild(editBtn);
-      card.querySelector('.btns').appendChild(delBtn);
+      card.appendChild(editBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.innerText='Delete';
+      delBtn.className='btn btn-red';
+      delBtn.onclick = async () => {
+        await deleteDoc(doc(db,'products',docSnap.id));
+        showToast(`${data.name} deleted`);
+        fetchProducts();
+      };
+      card.appendChild(delBtn);
     }
 
-    // Buy now
-    card.querySelector('.buyBtn').onclick=()=>{window.open('https://wa.me/0000000000?text=I want to buy '+encodeURIComponent(data.name),'_blank');};
-    grid.appendChild(card);
+    // Add "Add to Cart" button for users
+    const buyBtn = document.createElement('button');
+    buyBtn.innerText = 'Add to Cart';
+    buyBtn.className = 'btn btn-green';
+    buyBtn.onclick = () => addToCart({name:data.name, price:data.price});
+    card.appendChild(buyBtn);
+
+    productsGrid.appendChild(card);
   });
 }
 
 // Search
-document.getElementById('searchBox').addEventListener('input',e=>{
-  const term=e.target.value.toLowerCase();
-  document.querySelectorAll('.product-card').forEach(card=>{
-    const pname=card.querySelector('.product-name').textContent.toLowerCase();
-    card.style.display=pname.includes(term)?'flex':'none';
+document.getElementById('searchBox').addEventListener('input', e => {
+  const term = e.target.value.toLowerCase();
+  document.querySelectorAll('.product-card').forEach(card => {
+    const pname = card.querySelector('.product-name').textContent.toLowerCase();
+    card.style.display = pname.includes(term) ? 'flex' : 'none';
   });
 });
 
 // Cart system
-const cartBtn=document.getElementById('cartBtn');
-const cartPanel=document.getElementById('cartPanel');
-const cartItems=document.getElementById('cartItems');
-const cartTotal=document.getElementById('cartTotal');
-const closeCartBtn=document.getElementById('closeCartBtn');
+let cart = [];
+const cartBtn = document.getElementById('cartBtn');
+const cartPanel = document.getElementById('cartPanel');
+const cartItems = document.getElementById('cartItems');
+const cartTotal = document.getElementById('cartTotal');
+const closeCartBtn = document.getElementById('closeCartBtn');
 
-cartBtn.addEventListener('click',()=>cartPanel.style.display='flex');
-closeCartBtn.addEventListener('click',()=>cartPanel.style.display='none');
+cartBtn.addEventListener('click', () => cartPanel.style.display='flex');
+closeCartBtn.addEventListener('click', () => cartPanel.style.display='none');
 
-function addToCart(product){cart.push(product);updateCartUI();showToast(product.name+' added to cart');}
-function removeFromCart(i){const removed=cart.splice(i,1)[0];updateCartUI();showToast(removed.name+' removed from cart');}
-function updateCartUI(){cartItems.innerHTML='';let total=0;cart.forEach((item,i)=>{total+=item.price; const div=document.createElement('div'); div.className='cart-item'; div.innerHTML=`<span class="cart-item-name">${item.name}</span><span class="cart-item-price">Rs ${item.price}</span><button class="cart-item-remove">&times;</button>`; div.querySelector('.cart-item-remove').onclick=()=>removeFromCart(i); cartItems.appendChild(div);}); cartTotal.innerText='Total: Rs '+total; document.getElementById('cartCount').style.display=cart.length?'flex':'none'; document.getElementById('cartCount').innerText=cart.length;}
+function addToCart(product){
+  cart.push(product);
+  updateCartUI();
+  showToast(`${product.name} added to cart`);
+}
+
+function removeFromCart(index){
+  const removed = cart.splice(index,1)[0];
+  updateCartUI();
+  showToast(`${removed.name} removed from cart`);
+}
+
+function updateCartUI(){
+  cartItems.innerHTML='';
+  let total = 0;
+  cart.forEach((item,i)=>{
+    total += item.price;
+    const div = document.createElement('div');
+    div.className='cart-item';
+    div.innerHTML = `
+      <span class="cart-item-name">${item.name}</span>
+      <span class="cart-item-price">Rs ${item.price}</span>
+      <button class="cart-item-remove">&times;</button>
+    `;
+    div.querySelector('.cart-item-remove').onclick = () => removeFromCart(i);
+    cartItems.appendChild(div);
+  });
+  const grandTotal = total + deliveryCharge;
+  cartTotal.textContent = `Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${grandTotal}`;
+}
+
+// Add Product form submit
+document.getElementById('addProductForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const name = document.getElementById('productName').value;
+  const price = parseInt(document.getElementById('productPrice').value);
+  const desc = document.getElementById('productDesc').value;
+  const images = document.getElementById('productImages').files;
+  if(images.length === 0){showToast("Please select image"); return;}
+  const imgDataArray = [];
+  for(let i=0;i<images.length;i++){
+    const reader = new FileReader();
+    await new Promise(resolve=>{
+      reader.onload = ()=>{
+        imgDataArray.push(reader.result);
+        resolve();
+      };
+      reader.readAsDataURL(images[i]);
+    });
+  }
+  await addDoc(collection(db,'products'),{name,price,desc,imgs:imgDataArray});
+  showToast(`${name} added successfully`);
+  e.target.reset();
+  fetchProducts();
+});
+
+// Initial fetch
 fetchProducts();
 </script>
-
 </body>
 </html>
+
