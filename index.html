@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -52,61 +51,55 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 <h1>Shopick</h1>
 <img src="shopick-logo.png" alt="Shopick Logo" class="shopick-logo">
 <div class="container">
-  <div id="adminBar"><span class="tag">🔒 Admin Mode</span><button id="toggleAddForm">+ Add/Edit Product</button><button id="logoutBtn" class="btn-ghost">Logout</button></div>
-
-  <div id="adminForm" style="display:none; margin:10px 0 20px; padding:16px; border:2px dashed #e6d7fa; border-radius:16px; background:#faf7ff;">
-    <form id="addProductForm" autocomplete="off">
-      <input type="text" id="productName" placeholder="Product Name" required><br><br>
-      <input type="number" id="productPrice" placeholder="Price" min="1" required><br><br>
-      <textarea id="productDesc" placeholder="Description" rows="4" required></textarea><br><br>
-      <label>Product Images (Max 6)</label>
-      <input type="file" id="productImages" accept="image/*" multiple required><br><br>
-      <button type="submit" class="btn btn-green" style="width:100%">Add / Update Product</button>
-    </form>
-  </div>
-
-  <input type="text" id="searchBox" placeholder="Search product by name...">
-  <div class="products-grid" id="productsGrid"></div>
+<div id="adminBar"><span class="tag">🔒 Admin Mode</span><button id="toggleAddForm">+ Add/Edit Product</button><button id="logoutBtn" class="btn-ghost">Logout</button></div>
+<div id="adminForm" style="display:none; margin:10px 0 20px; padding:16px; border:2px dashed #e6d7fa; border-radius:16px; background:#faf7ff;">
+<form id="addProductForm" autocomplete="off">
+<input type="text" id="productName" placeholder="Product Name" required><br><br>
+<input type="number" id="productPrice" placeholder="Price" min="1" required><br><br>
+<textarea id="productDesc" placeholder="Description" rows="4" required></textarea><br><br>
+<input type="file" id="productImages" accept="image/*" multiple required><br><br>
+<button type="submit" class="btn btn-green" style="width:100%">Add / Update Product</button>
+</form>
 </div>
-
+<input type="text" id="searchBox" placeholder="Search product by name...">
+<div class="products-grid" id="productsGrid"></div>
+</div>
 <button id="cartBtn">🛒 <div id="cartCount">0</div></button>
 <div id="cartPanel">
-  <h2>Your Cart</h2>
-  <div id="cartItems"></div>
-  <div id="cartTotal">Total: Rs 0 + Delivery: Rs 50</div>
-  <button id="closeCartBtn">Close Cart</button>
+<h2>Your Cart</h2>
+<div id="cartItems"></div>
+<div id="cartTotal">Total: Rs 0 + Delivery: Rs 50</div>
+<button id="closeCartBtn">Close Cart</button>
 </div>
 <div id="toast"></div>
 <button id="adminLoginBtn" class="btn btn-blue" style="position:fixed; top:90px; right:20px; z-index:10000;">Admin Login</button>
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBzw32SxXFEKyWPUYoUM0VEt-wtfSrLFdQ",
   authDomain: "shopick-41385.firebaseapp.com",
   projectId: "shopick-41385",
-  storageBucket: "shopick-41385.appspot.com",
+  storageBucket: "shopick-41385.appspot.com",   // ✅ corrected
   messagingSenderId: "868021422719",
-  appId: "1:868021422719:web:67e237ad1fc5251c4e8d4a"
+  appId: "1:868021422719:web:67e237ad1fc5251c4e8d4a",
+  measurementId: "G-GNDW3CQ1T4"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app);
 
 let currentUser = null;
 const deliveryCharge = 50;
-const whatsappNumber = "923001234567"; // change to your number
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>{t.classList.remove('show');},2000);}
 
-// Admin login
-document.getElementById('adminLoginBtn').onclick = async ()=>{
+// Admin login with prompt
+const adminLoginBtn = document.getElementById('adminLoginBtn');
+adminLoginBtn.onclick = async ()=>{
   const email = prompt('Enter admin email:');
   const password = prompt('Enter admin password:');
   try{
@@ -127,7 +120,7 @@ document.getElementById('logoutBtn').onclick = async ()=>{
   showToast('Admin logged out');
 };
 
-// Fetch products
+// Fetch and show products
 async function fetchProducts(){
   const productsGrid = document.getElementById('productsGrid');
   productsGrid.innerHTML='';
@@ -137,21 +130,21 @@ async function fetchProducts(){
     const data = docSnap.data();
     const card = document.createElement('div');
     card.className='product-card';
-
-    // Images slider (show first image)
-    const imgSrc = data.imgs && data.imgs.length ? data.imgs[0] : '';
+    const imgSrc = data.imgs && data.imgs.length ? data.imgs[0]:'';
     card.innerHTML = `<img src="${imgSrc}" class="product-img"><div class="product-info"><div class="product-name">${data.name}</div><div class="product-desc">${data.desc}</div><div class="product-price">Rs ${data.price}</div><div class='delivery-charge'>Delivery: Rs ${deliveryCharge}</div></div>`;
 
-    // Admin buttons
     if(currentUser){
       const editBtn = document.createElement('button');
       editBtn.innerText='Edit';
       editBtn.className='btn btn-blue';
-      editBtn.onclick = () => {
+            editBtn.onclick = () => {
+        // Populate form with existing product data for editing
         document.getElementById('productName').value = data.name;
         document.getElementById('productPrice').value = data.price;
-        document.getElementById('productDesc').value = data.desc;
+        document.getElementById('productDesc').value = data.desc;o
         document.getElementById('adminForm').style.display = 'block';
+
+        // When admin submits, update the product
         const addForm = document.getElementById('addProductForm');
         addForm.onsubmit = async (e) => {
           e.preventDefault();
@@ -181,43 +174,49 @@ async function fetchProducts(){
       card.appendChild(delBtn);
     }
 
-    // User buttons
-    const buyBtn = document.createElement('button');
-    buyBtn.innerText = 'Buy Now';
-    buyBtn.className = 'btn btn-green';
-    buyBtn.onclick = () => {
-      const message = `Hi, I want to buy ${data.name} for Rs ${data.price}`;
-      window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
-    };
-    const cartBtn = document.createElement('button');
-    cartBtn.innerText = 'Add to Cart';
-    cartBtn.className = 'btn btn-blue';
-    cartBtn.onclick = () => addToCart({name:data.name, price:data.price});
-    card.appendChild(cartBtn);
-    card.appendChild(buyBtn);
+    // Add "Add to Cart" button for users
+    // Add "Add to Cart" button
+const cartBtn = document.createElement('button');
+cartBtn.innerText = 'Add to Cart';
+cartBtn.className = 'btn btn-green';
+cartBtn.onclick = () => addToCart({name:data.name, price:data.price});
+card.appendChild(cartBtn);
+
+// Add "Buy Now" button (WhatsApp Order)
+const buyNowBtn = document.createElement('button');
+buyNowBtn.innerText = 'Buy Now';
+buyNowBtn.className = 'btn btn-blue';
+buyNowBtn.onclick = () => {
+  const whatsappNumber = "923001234567"; // 👉 apna WhatsApp number yahan dalna
+  const message = `Hello! I want to buy "${data.name}" for Rs ${data.price}. Please confirm my order.`;
+  window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank");
+};
+card.appendChild(buyNowBtn);
+
 
     productsGrid.appendChild(card);
   });
 }
 
 // Search
-document.getElementById('searchBox').addEventListener('input', e=>{
+document.getElementById('searchBox').addEventListener('input', e => {
   const term = e.target.value.toLowerCase();
-  document.querySelectorAll('.product-card').forEach(card=>{
+  document.querySelectorAll('.product-card').forEach(card => {
     const pname = card.querySelector('.product-name').textContent.toLowerCase();
-    card.style.display = pname.includes(term) ? 'flex':'none';
+    card.style.display = pname.includes(term) ? 'flex' : 'none';
   });
 });
 
 // Cart system
 let cart = [];
-const cartBtnEl = document.getElementById('cartBtn');
+const cartBtn = document.getElementById('cartBtn');
 const cartPanel = document.getElementById('cartPanel');
 const cartItems = document.getElementById('cartItems');
 const cartTotal = document.getElementById('cartTotal');
 const closeCartBtn = document.getElementById('closeCartBtn');
-cartBtnEl.addEventListener('click', ()=>cartPanel.style.display='flex');
-closeCartBtn.addEventListener('click', ()=>cartPanel.style.display='none');
+
+cartBtn.addEventListener('click', () => cartPanel.style.display='flex');
+closeCartBtn.addEventListener('click', () => cartPanel.style.display='none');
 
 function addToCart(product){
   cart.push(product);
@@ -238,33 +237,38 @@ function updateCartUI(){
     total += item.price;
     const div = document.createElement('div');
     div.className='cart-item';
-    div.innerHTML = `<span class="cart-item-name">${item.name}</span>
-                     <span class="cart-item-price">Rs ${item.price}</span>
-                     <button class="cart-item-remove">&times;</button>`;
-    div.querySelector('.cart-item-remove').onclick = ()=>removeFromCart(i);
+    div.innerHTML = `
+      <span class="cart-item-name">${item.name}</span>
+      <span class="cart-item-price">Rs ${item.price}</span>
+      <button class="cart-item-remove">&times;</button>
+    `;
+    div.querySelector('.cart-item-remove').onclick = () => removeFromCart(i);
     cartItems.appendChild(div);
   });
   const grandTotal = total + deliveryCharge;
   cartTotal.textContent = `Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${grandTotal}`;
 }
 
-// Add Product
+// Add Product form submit
 document.getElementById('addProductForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const name = document.getElementById('productName').value;
   const price = parseInt(document.getElementById('productPrice').value);
   const desc = document.getElementById('productDesc').value;
-  const files = document.getElementById('productImages').files;
-  if(files.length === 0 || files.length > 6){showToast("Select 1 to 6 images"); return;}
-  const imgUrls = [];
-  for(let i=0;i<files.length;i++){
-    const file = files[i];
-    const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef,file);
-    const url = await getDownloadURL(storageRef);
-    imgUrls.push(url);
+  const images = document.getElementById('productImages').files;
+  if(images.length === 0){showToast("Please select image"); return;}
+  const imgDataArray = [];
+  for(let i=0;i<images.length;i++){
+    const reader = new FileReader();
+    await new Promise(resolve=>{
+      reader.onload = ()=>{
+        imgDataArray.push(reader.result);
+        resolve();
+      };
+      reader.readAsDataURL(images[i]);
+    });
   }
-  await addDoc(collection(db,'products'), {name, price, desc, imgs: imgUrls});
+  await addDoc(collection(db,'products'),{name,price,desc,imgs:imgDataArray});
   showToast(`${name} added successfully`);
   e.target.reset();
   fetchProducts();
@@ -275,3 +279,4 @@ fetchProducts();
 </script>
 </body>
 </html>
+
