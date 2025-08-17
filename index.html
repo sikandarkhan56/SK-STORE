@@ -18,9 +18,8 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 #adminBar button{background:var(--pri);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;}
 #adminBar button:hover{background:var(--pri-dark);transform:translateY(-1px);}
 .products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px;}
-@media (max-width: 768px) {
-  .products-grid { grid-template-columns: repeat(3, 1fr); }
-}
+@media (max-width: 1024px) { .products-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 768px) { .products-grid { grid-template-columns: 1fr; } }
 .product-card{background:#fff;border-radius:16px;box-shadow:0 7px 20px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .3s ease, box-shadow .3s ease;overflow:hidden;position:relative;}
 .product-card:hover{transform:translateY(-6px);box-shadow:0 14px 35px rgba(0,0,0,.12);}
 .product-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-bottom:2px solid var(--pri);}
@@ -49,7 +48,7 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 #closeCartBtn:hover{background:var(--red-dark);}
 #toast{position:fixed;top:20px;right:20px;background:var(--blue);color:#fff;padding:14px 18px;border-radius:12px;font-weight:800;font-size:.98rem;opacity:0;pointer-events:none;transform:translateY(-20px);z-index:10000;box-shadow:0 8px 22px rgba(0,0,0,.18);}
 #toast.show{opacity:1;transform:translateY(0);}
-.img-arrow-left,.img-arrow-right{position:absolute;top:40%;background:#fff;border:none;padding:5px 8px;border-radius:50%;cursor:pointer;font-weight:bold;z-index:10;}
+.img-arrow-left,.img-arrow-right{position:absolute;top:40%;background:#fff;border:none;padding:8px 10px;border-radius:50%;cursor:pointer;font-weight:bold;z-index:10;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);}
 .img-arrow-left{left:5px;} .img-arrow-right{right:5px;}
 .img-dots{display:flex;justify-content:center;gap:5px;margin-top:5px;}
 .img-dot{width:8px;height:8px;border-radius:50%;background:#ccc;cursor:pointer;}
@@ -119,13 +118,7 @@ document.getElementById('adminLoginBtn').onclick = async () => {
     fetchProducts();
   }catch(err){showToast('Login failed');}
 };
-document.getElementById('logoutBtn').onclick = async ()=>{
-  await signOut(auth);
-  currentUser=null;
-  document.getElementById('adminBar').style.display='none';
-  document.getElementById('adminForm').style.display='none';
-  showToast('Admin logged out');
-};
+document.getElementById('logoutBtn').onclick = async ()=>{ await signOut(auth); currentUser=null; document.getElementById('adminBar').style.display='none'; document.getElementById('adminForm').style.display='none'; showToast('Admin logged out'); };
 
 // Fetch products
 async function fetchProducts(){
@@ -158,60 +151,27 @@ async function fetchProducts(){
     const imgEl = card.querySelector(`#productImg-${docSnap.id}`);
     const dots = Array.from(card.querySelectorAll('.img-dot'));
     if(imgs.length>1){
-      card.querySelector('.img-arrow-left').onclick = ()=>{
-        currentImgIndex=(currentImgIndex-1+imgs.length)%imgs.length;
-        imgEl.src=imgs[currentImgIndex];
-        dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active');
-      };
-      card.querySelector('.img-arrow-right').onclick = ()=>{
-        currentImgIndex=(currentImgIndex+1)%imgs.length;
-        imgEl.src=imgs[currentImgIndex];
-        dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active');
-      };
+      card.querySelector('.img-arrow-left').onclick = ()=>{ currentImgIndex=(currentImgIndex-1+imgs.length)%imgs.length; imgEl.src=imgs[currentImgIndex]; dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active'); };
+      card.querySelector('.img-arrow-right').onclick = ()=>{ currentImgIndex=(currentImgIndex+1)%imgs.length; imgEl.src=imgs[currentImgIndex]; dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active'); };
     }
 
-    // Admin edit/delete buttons
     if(currentUser){
-      const editBtn = document.createElement('button');
-      editBtn.innerText='Edit'; editBtn.className='btn btn-blue';
-      editBtn.onclick = () => {
-        document.getElementById('productName').value = data.name;
-        document.getElementById('productPrice').value = data.price;
-        document.getElementById('productDesc').value = data.desc;
-        document.getElementById('adminForm').style.display='block';
+      const editBtn = document.createElement('button'); editBtn.innerText='Edit'; editBtn.className='btn btn-blue';
+      editBtn.onclick = () => { document.getElementById('productName').value = data.name; document.getElementById('productPrice').value = data.price; document.getElementById('productDesc').value = data.desc; document.getElementById('adminForm').style.display='block';
         const addForm = document.getElementById('addProductForm');
-        addForm.onsubmit = async e => {
-          e.preventDefault();
-          const updatedName = document.getElementById('productName').value;
-          const updatedPrice = parseInt(document.getElementById('productPrice').value);
-          const updatedDesc = document.getElementById('productDesc').value;
-          await updateDoc(doc(db,'products',docSnap.id),{name:updatedName,price:updatedPrice,desc:updatedDesc});
-          showToast(`${updatedName} updated`);
-          addForm.reset();
-          fetchProducts();
-        };
+        addForm.onsubmit = async e => { e.preventDefault(); const updatedName=document.getElementById('productName').value; const updatedPrice=parseInt(document.getElementById('productPrice').value); const updatedDesc=document.getElementById('productDesc').value; await updateDoc(doc(db,'products',docSnap.id),{name:updatedName,price:updatedPrice,desc:updatedDesc}); showToast(`${updatedName} updated`); addForm.reset(); fetchProducts(); };
       };
       card.appendChild(editBtn);
-
-      const delBtn = document.createElement('button');
-      delBtn.innerText='Delete'; delBtn.className='btn btn-red';
-      delBtn.onclick=async()=>{
-        await deleteDoc(doc(db,'products',docSnap.id));
-        showToast(`${data.name} deleted`);
-        fetchProducts();
-      };
+      const delBtn = document.createElement('button'); delBtn.innerText='Delete'; delBtn.className='btn btn-red';
+      delBtn.onclick=async()=>{ await deleteDoc(doc(db,'products',docSnap.id)); showToast(`${data.name} deleted`); fetchProducts(); };
       card.appendChild(delBtn);
     }
 
-    // Add to Cart
-    const cartBtnEl=document.createElement('button');
-    cartBtnEl.innerText='Add to Cart'; cartBtnEl.className='btn btn-green';
+    const cartBtnEl=document.createElement('button'); cartBtnEl.innerText='Add to Cart'; cartBtnEl.className='btn btn-green';
     cartBtnEl.onclick=()=>addToCart({name:data.name,price:data.price});
     card.appendChild(cartBtnEl);
 
-    // Buy Now
-    const buyNowBtn=document.createElement('button');
-    buyNowBtn.innerText='Buy Now'; buyNowBtn.className='btn btn-blue';
+    const buyNowBtn=document.createElement('button'); buyNowBtn.innerText='Buy Now'; buyNowBtn.className='btn btn-blue';
     buyNowBtn.onclick=()=>window.open(`https://wa.me/923213838357?text=${encodeURIComponent(`Hello! I want to buy "${data.name}" for Rs ${data.price}. Please confirm my order.`)}`,"_blank");
     card.appendChild(buyNowBtn);
 
@@ -220,13 +180,7 @@ async function fetchProducts(){
 }
 
 // Search
-document.getElementById('searchBox').addEventListener('input',e=>{
-  const term=e.target.value.toLowerCase();
-  document.querySelectorAll('.product-card').forEach(card=>{
-    const pname=card.querySelector('.product-name').textContent.toLowerCase();
-    card.style.display=pname.includes(term)?'flex':'none';
-  });
-});
+document.getElementById('searchBox').addEventListener('input',e=>{ const term=e.target.value.toLowerCase(); document.querySelectorAll('.product-card').forEach(card=>{ const pname=card.querySelector('.product-name').textContent.toLowerCase(); card.style.display=pname.includes(term)?'flex':'none'; }); });
 
 // Cart
 let cart=[];
@@ -235,25 +189,11 @@ const cartPanel=document.getElementById('cartPanel');
 const cartItems=document.getElementById('cartItems');
 const cartTotal=document.getElementById('cartTotal');
 const closeCartBtn=document.getElementById('closeCartBtn');
-
 cartBtn.addEventListener('click',()=>cartPanel.style.display='flex');
 closeCartBtn.addEventListener('click',()=>cartPanel.style.display='none');
-
 function addToCart(product){cart.push(product);updateCartUI();showToast(`${product.name} added to cart`);}
 function removeFromCart(index){const removed=cart.splice(index,1)[0];updateCartUI();showToast(`${removed.name} removed from cart`);}
-function updateCartUI(){
-  cartItems.innerHTML='';
-  let total=0;
-  cart.forEach((item,i)=>{
-    total+=item.price;
-    const div=document.createElement('div');
-    div.className='cart-item';
-    div.innerHTML=`<span class="cart-item-name">${item.name}</span><span class="cart-item-price">Rs ${item.price}</span><button class="cart-item-remove">&times;</button>`;
-    div.querySelector('.cart-item-remove').onclick=()=>removeFromCart(i);
-    cartItems.appendChild(div);
-  });
-  cartTotal.textContent=`Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${total+deliveryCharge}`;
-}
+function updateCartUI(){ cartItems.innerHTML=''; let total=0; cart.forEach((item,i)=>{ total+=item.price; const div=document.createElement('div'); div.className='cart-item'; div.innerHTML=`<span class="cart-item-name">${item.name}</span><span class="cart-item-price">Rs ${item.price}</span><button class="cart-item-remove">&times;</button>`; div.querySelector('.cart-item-remove').onclick=()=>removeFromCart(i); cartItems.appendChild(div); }); cartTotal.textContent=`Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${total+deliveryCharge}`; }
 
 // Add Product Form
 document.getElementById('addProductForm').addEventListener('submit',async e=>{
@@ -266,13 +206,7 @@ document.getElementById('addProductForm').addEventListener('submit',async e=>{
   const imgDataArray=[];
   for(let i=0;i<images.length;i++){
     const reader=new FileReader();
-    await new Promise(resolve=>{
-      reader.onload=()=>{
-        imgDataArray.push(reader.result);
-        resolve();
-      };
-      reader.readAsDataURL(images[i]);
-    });
+    await new Promise(resolve=>{ reader.onload=()=>{ imgDataArray.push(reader.result); resolve(); }; reader.readAsDataURL(images[i]); });
   }
   await addDoc(collection(db,'products'),{name,price,desc,imgs:imgDataArray});
   showToast(`${name} added successfully`);
