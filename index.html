@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shopick - Product Store</title>
+<title>SK Store - Product Store</title>
 <style>
 :root{--pri:#7c4ba6;--pri-dark:#5a2d82;--blue:#2563eb;--blue-dark:#1e40af;--green:#22c55e;--green-dark:#15803d;--red:#ef4444;--red-dark:#b91c1c;--text:#222;}
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
@@ -12,12 +13,15 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 .container{background:#fff;max-width:1000px;width:100%;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.12);padding:30px 35px 40px;overflow:hidden;}
 #searchBox{width:100%;padding:14px 18px;font-size:1.05rem;border:2px solid var(--pri);border-radius:16px;margin-bottom:22px;font-weight:600;}
 #searchBox:focus{outline:none;border-color:var(--pri-dark);box-shadow:0 0 15px #5a2d82aa;background:#fff;}
-#adminBar{display:none;gap:10px;margin:10px 0 22px;}
+#adminBar{display:none;gap:10px;margin:10px 0 22px;flex-wrap:wrap;}
 #adminBar .tag{background:#f3e8ff;color:var(--pri-dark);padding:8px 12px;border-radius:999px;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;gap:6px;}
 #adminBar button{background:var(--pri);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;}
 #adminBar button:hover{background:var(--pri-dark);transform:translateY(-1px);}
 .products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px;}
-.product-card{background:#fff;border-radius:16px;box-shadow:0 7px 20px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .3s ease, box-shadow .3s ease;overflow:hidden;}
+@media (max-width: 768px) {
+  .products-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.product-card{background:#fff;border-radius:16px;box-shadow:0 7px 20px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .3s ease, box-shadow .3s ease;overflow:hidden;position:relative;}
 .product-card:hover{transform:translateY(-6px);box-shadow:0 14px 35px rgba(0,0,0,.12);}
 .product-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-bottom:2px solid var(--pri);}
 .product-info{padding:18px 22px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;}
@@ -45,11 +49,16 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 #closeCartBtn:hover{background:var(--red-dark);}
 #toast{position:fixed;top:20px;right:20px;background:var(--blue);color:#fff;padding:14px 18px;border-radius:12px;font-weight:800;font-size:.98rem;opacity:0;pointer-events:none;transform:translateY(-20px);z-index:10000;box-shadow:0 8px 22px rgba(0,0,0,.18);}
 #toast.show{opacity:1;transform:translateY(0);}
+.img-arrow-left,.img-arrow-right{position:absolute;top:40%;background:#fff;border:none;padding:5px 8px;border-radius:50%;cursor:pointer;font-weight:bold;z-index:10;}
+.img-arrow-left{left:5px;} .img-arrow-right{right:5px;}
+.img-dots{display:flex;justify-content:center;gap:5px;margin-top:5px;}
+.img-dot{width:8px;height:8px;border-radius:50%;background:#ccc;cursor:pointer;}
+.img-dot.active{background:var(--pri);}
 </style>
 </head>
 <body>
-<h1>Shopick</h1>
-<img src="shopick-logo.png" alt="Shopick Logo" class="shopick-logo">
+<h1>SK Store</h1>
+<img src="skstore-logo.jpg" alt="SK Store Logo" class="shopick-logo">
 <div class="container">
 <div id="adminBar"><span class="tag">🔒 Admin Mode</span><button id="toggleAddForm">+ Add/Edit Product</button><button id="logoutBtn" class="btn-ghost">Logout</button></div>
 <div id="adminForm" style="display:none; margin:10px 0 20px; padding:16px; border:2px dashed #e6d7fa; border-radius:16px; background:#faf7ff;">
@@ -68,11 +77,12 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 <div id="cartPanel">
 <h2>Your Cart</h2>
 <div id="cartItems"></div>
-<div id="cartTotal">Total: Rs 0 + Delivery: Rs 50</div>
+<div id="cartTotal">Total: Rs 0 + Delivery: Rs 250</div>
 <button id="closeCartBtn">Close Cart</button>
 </div>
 <div id="toast"></div>
 <button id="adminLoginBtn" class="btn btn-blue" style="position:fixed; top:90px; right:20px; z-index:10000;">Admin Login</button>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -82,7 +92,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBzw32SxXFEKyWPUYoUM0VEt-wtfSrLFdQ",
   authDomain: "shopick-41385.firebaseapp.com",
   projectId: "shopick-41385",
-  storageBucket: "shopick-41385.appspot.com",   // ✅ corrected
+  storageBucket: "shopick-41385.appspot.com",
   messagingSenderId: "868021422719",
   appId: "1:868021422719:web:67e237ad1fc5251c4e8d4a",
   measurementId: "G-GNDW3CQ1T4"
@@ -93,13 +103,11 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let currentUser = null;
-const deliveryCharge = 50;
-
+const deliveryCharge = 250;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>{t.classList.remove('show');},2000);}
 
-// Admin login with prompt
-const adminLoginBtn = document.getElementById('adminLoginBtn');
-adminLoginBtn.onclick = async ()=>{
+// Admin login
+document.getElementById('adminLoginBtn').onclick = async () => {
   const email = prompt('Enter admin email:');
   const password = prompt('Enter admin password:');
   try{
@@ -111,16 +119,15 @@ adminLoginBtn.onclick = async ()=>{
     fetchProducts();
   }catch(err){showToast('Login failed');}
 };
-
 document.getElementById('logoutBtn').onclick = async ()=>{
   await signOut(auth);
-  currentUser = null;
+  currentUser=null;
   document.getElementById('adminBar').style.display='none';
   document.getElementById('adminForm').style.display='none';
   showToast('Admin logged out');
 };
 
-// Fetch and show products
+// Fetch products
 async function fetchProducts(){
   const productsGrid = document.getElementById('productsGrid');
   productsGrid.innerHTML='';
@@ -130,33 +137,56 @@ async function fetchProducts(){
     const data = docSnap.data();
     const card = document.createElement('div');
     card.className='product-card';
-    const imgSrc = data.imgs && data.imgs.length ? data.imgs[0]:'';
-    card.innerHTML = `<img src="${imgSrc}" class="product-img"><div class="product-info"><div class="product-name">${data.name}</div><div class="product-desc">${data.desc}</div><div class="product-price">Rs ${data.price}</div><div class='delivery-charge'>Delivery: Rs ${deliveryCharge}</div></div>`;
+    
+    const imgs = data.imgs && data.imgs.length ? data.imgs : [''];
+    let currentImgIndex = 0;
+    
+    card.innerHTML = `
+      <div style="position:relative;">
+        <img src="${imgs[0]}" class="product-img" id="productImg-${docSnap.id}">
+        ${imgs.length>1 ? '<button class="img-arrow-left">&#10094;</button><button class="img-arrow-right">&#10095;</button>':''}
+        <div class="img-dots">${imgs.map((_,i)=>`<div class="img-dot ${i===0?'active':''}"></div>`).join('')}</div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">${data.name}</div>
+        <div class="product-desc">${data.desc}</div>
+        <div class="product-price">Rs ${data.price}</div>
+        <div class='delivery-charge'>Delivery: Rs ${deliveryCharge}</div>
+      </div>
+    `;
+    
+    const imgEl = card.querySelector(`#productImg-${docSnap.id}`);
+    const dots = Array.from(card.querySelectorAll('.img-dot'));
+    if(imgs.length>1){
+      card.querySelector('.img-arrow-left').onclick = ()=>{
+        currentImgIndex=(currentImgIndex-1+imgs.length)%imgs.length;
+        imgEl.src=imgs[currentImgIndex];
+        dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active');
+      };
+      card.querySelector('.img-arrow-right').onclick = ()=>{
+        currentImgIndex=(currentImgIndex+1)%imgs.length;
+        imgEl.src=imgs[currentImgIndex];
+        dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active');
+      };
+    }
 
+    // Admin edit/delete buttons
     if(currentUser){
       const editBtn = document.createElement('button');
-      editBtn.innerText='Edit';
-      editBtn.className='btn btn-blue';
-            editBtn.onclick = () => {
-        // Populate form with existing product data for editing
+      editBtn.innerText='Edit'; editBtn.className='btn btn-blue';
+      editBtn.onclick = () => {
         document.getElementById('productName').value = data.name;
         document.getElementById('productPrice').value = data.price;
-        document.getElementById('productDesc').value = data.desc;o
-        document.getElementById('adminForm').style.display = 'block';
-
-        // When admin submits, update the product
+        document.getElementById('productDesc').value = data.desc;
+        document.getElementById('adminForm').style.display='block';
         const addForm = document.getElementById('addProductForm');
-        addForm.onsubmit = async (e) => {
+        addForm.onsubmit = async e => {
           e.preventDefault();
           const updatedName = document.getElementById('productName').value;
           const updatedPrice = parseInt(document.getElementById('productPrice').value);
           const updatedDesc = document.getElementById('productDesc').value;
-          await updateDoc(doc(db, 'products', docSnap.id), {
-            name: updatedName,
-            price: updatedPrice,
-            desc: updatedDesc
-          });
-          showToast(`${updatedName} updated successfully`);
+          await updateDoc(doc(db,'products',docSnap.id),{name:updatedName,price:updatedPrice,desc:updatedDesc});
+          showToast(`${updatedName} updated`);
           addForm.reset();
           fetchProducts();
         };
@@ -164,9 +194,8 @@ async function fetchProducts(){
       card.appendChild(editBtn);
 
       const delBtn = document.createElement('button');
-      delBtn.innerText='Delete';
-      delBtn.className='btn btn-red';
-      delBtn.onclick = async () => {
+      delBtn.innerText='Delete'; delBtn.className='btn btn-red';
+      delBtn.onclick=async()=>{
         await deleteDoc(doc(db,'products',docSnap.id));
         showToast(`${data.name} deleted`);
         fetchProducts();
@@ -174,94 +203,71 @@ async function fetchProducts(){
       card.appendChild(delBtn);
     }
 
-    // Add "Add to Cart" button for users
-    // Add "Add to Cart" button
-const cartBtn = document.createElement('button');
-cartBtn.innerText = 'Add to Cart';
-cartBtn.className = 'btn btn-green';
-cartBtn.onclick = () => addToCart({name:data.name, price:data.price});
-card.appendChild(cartBtn);
+    // Add to Cart
+    const cartBtnEl=document.createElement('button');
+    cartBtnEl.innerText='Add to Cart'; cartBtnEl.className='btn btn-green';
+    cartBtnEl.onclick=()=>addToCart({name:data.name,price:data.price});
+    card.appendChild(cartBtnEl);
 
-// Add "Buy Now" button (WhatsApp Order)
-const buyNowBtn = document.createElement('button');
-buyNowBtn.innerText = 'Buy Now';
-buyNowBtn.className = 'btn btn-blue';
-buyNowBtn.onclick = () => {
-  const whatsappNumber = "923213838357"; // 👉 apna WhatsApp number yahan dalna
-  const message = `Hello! I want to buy "${data.name}" for Rs ${data.price}. Please confirm my order.`;
-  window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank");
-};
-card.appendChild(buyNowBtn);
-
+    // Buy Now
+    const buyNowBtn=document.createElement('button');
+    buyNowBtn.innerText='Buy Now'; buyNowBtn.className='btn btn-blue';
+    buyNowBtn.onclick=()=>window.open(`https://wa.me/923213838357?text=${encodeURIComponent(`Hello! I want to buy "${data.name}" for Rs ${data.price}. Please confirm my order.`)}`,"_blank");
+    card.appendChild(buyNowBtn);
 
     productsGrid.appendChild(card);
   });
 }
 
 // Search
-document.getElementById('searchBox').addEventListener('input', e => {
-  const term = e.target.value.toLowerCase();
-  document.querySelectorAll('.product-card').forEach(card => {
-    const pname = card.querySelector('.product-name').textContent.toLowerCase();
-    card.style.display = pname.includes(term) ? 'flex' : 'none';
+document.getElementById('searchBox').addEventListener('input',e=>{
+  const term=e.target.value.toLowerCase();
+  document.querySelectorAll('.product-card').forEach(card=>{
+    const pname=card.querySelector('.product-name').textContent.toLowerCase();
+    card.style.display=pname.includes(term)?'flex':'none';
   });
 });
 
-// Cart system
-let cart = [];
-const cartBtn = document.getElementById('cartBtn');
-const cartPanel = document.getElementById('cartPanel');
-const cartItems = document.getElementById('cartItems');
-const cartTotal = document.getElementById('cartTotal');
-const closeCartBtn = document.getElementById('closeCartBtn');
+// Cart
+let cart=[];
+const cartBtn=document.getElementById('cartBtn');
+const cartPanel=document.getElementById('cartPanel');
+const cartItems=document.getElementById('cartItems');
+const cartTotal=document.getElementById('cartTotal');
+const closeCartBtn=document.getElementById('closeCartBtn');
 
-cartBtn.addEventListener('click', () => cartPanel.style.display='flex');
-closeCartBtn.addEventListener('click', () => cartPanel.style.display='none');
+cartBtn.addEventListener('click',()=>cartPanel.style.display='flex');
+closeCartBtn.addEventListener('click',()=>cartPanel.style.display='none');
 
-function addToCart(product){
-  cart.push(product);
-  updateCartUI();
-  showToast(`${product.name} added to cart`);
-}
-
-function removeFromCart(index){
-  const removed = cart.splice(index,1)[0];
-  updateCartUI();
-  showToast(`${removed.name} removed from cart`);
-}
-
+function addToCart(product){cart.push(product);updateCartUI();showToast(`${product.name} added to cart`);}
+function removeFromCart(index){const removed=cart.splice(index,1)[0];updateCartUI();showToast(`${removed.name} removed from cart`);}
 function updateCartUI(){
   cartItems.innerHTML='';
-  let total = 0;
+  let total=0;
   cart.forEach((item,i)=>{
-    total += item.price;
-    const div = document.createElement('div');
+    total+=item.price;
+    const div=document.createElement('div');
     div.className='cart-item';
-    div.innerHTML = `
-      <span class="cart-item-name">${item.name}</span>
-      <span class="cart-item-price">Rs ${item.price}</span>
-      <button class="cart-item-remove">&times;</button>
-    `;
-    div.querySelector('.cart-item-remove').onclick = () => removeFromCart(i);
+    div.innerHTML=`<span class="cart-item-name">${item.name}</span><span class="cart-item-price">Rs ${item.price}</span><button class="cart-item-remove">&times;</button>`;
+    div.querySelector('.cart-item-remove').onclick=()=>removeFromCart(i);
     cartItems.appendChild(div);
   });
-  const grandTotal = total + deliveryCharge;
-  cartTotal.textContent = `Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${grandTotal}`;
+  cartTotal.textContent=`Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${total+deliveryCharge}`;
 }
 
-// Add Product form submit
-document.getElementById('addProductForm').addEventListener('submit', async e=>{
+// Add Product Form
+document.getElementById('addProductForm').addEventListener('submit',async e=>{
   e.preventDefault();
-  const name = document.getElementById('productName').value;
-  const price = parseInt(document.getElementById('productPrice').value);
-  const desc = document.getElementById('productDesc').value;
-  const images = document.getElementById('productImages').files;
-  if(images.length === 0){showToast("Please select image"); return;}
-  const imgDataArray = [];
+  const name=document.getElementById('productName').value;
+  const price=parseInt(document.getElementById('productPrice').value);
+  const desc=document.getElementById('productDesc').value;
+  const images=document.getElementById('productImages').files;
+  if(images.length===0){showToast("Please select image");return;}
+  const imgDataArray=[];
   for(let i=0;i<images.length;i++){
-    const reader = new FileReader();
+    const reader=new FileReader();
     await new Promise(resolve=>{
-      reader.onload = ()=>{
+      reader.onload=()=>{
         imgDataArray.push(reader.result);
         resolve();
       };
@@ -279,4 +285,3 @@ fetchProducts();
 </script>
 </body>
 </html>
-
