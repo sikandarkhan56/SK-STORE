@@ -10,60 +10,62 @@
 body{background:linear-gradient(135deg,#a8edea,#fed6e3);min-height:100vh;padding:40px 20px 80px;color:var(--text);display:flex;flex-direction:column;align-items:center;}
 h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);text-align:center;letter-spacing:.5px;}
 .shopick-logo{width:160px;height:auto;margin-bottom:30px;border-radius:14px;box-shadow:0 10px 25px rgba(124,75,166,.35);}
-.container{background:#fff;max-width:1000px;width:100%;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.12);padding:30px 35px 40px;overflow:hidden;}
+.container{background:#fff;max-width:1000px;width:100%;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.12);padding:30px 20px 40px;overflow:hidden;}
 #searchBox{width:100%;padding:14px 18px;font-size:1.05rem;border:2px solid var(--pri);border-radius:16px;margin-bottom:22px;font-weight:600;}
 #searchBox:focus{outline:none;border-color:var(--pri-dark);box-shadow:0 0 15px #5a2d82aa;background:#fff;}
 #adminBar{display:none;gap:10px;margin:10px 0 22px;flex-wrap:wrap;}
 #adminBar .tag{background:#f3e8ff;color:var(--pri-dark);padding:8px 12px;border-radius:999px;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;gap:6px;}
 #adminBar button{background:var(--pri);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;}
 #adminBar button:hover{background:var(--pri-dark);transform:translateY(-1px);}
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* default desktop: 3 per row */
-  gap: 22px;
-}
 
-@media (max-width: 768px) {
-  .products-grid {
-    grid-template-columns: 1fr; /* mobile: 1 per row */
-  }
-}
+/* Products grid */
+.products-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+@media(max-width:1200px){ .products-grid{grid-template-columns:repeat(3,1fr);} }
+@media(max-width:992px){ .products-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:768px){ .products-grid{grid-template-columns:repeat(3,1fr);} } /* Mobile same 3 per row */
 
-@media (max-width: 1024px) { .products-grid { grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 768px) { .products-grid { grid-template-columns: 1fr; } }
 .product-card{background:#fff;border-radius:16px;box-shadow:0 7px 20px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .3s ease, box-shadow .3s ease;overflow:hidden;position:relative;}
 .product-card:hover{transform:translateY(-6px);box-shadow:0 14px 35px rgba(0,0,0,.12);}
-.product-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-bottom:2px solid var(--pri);}
-.product-info{padding:18px 22px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;}
-.product-name{font-size:1.05rem;font-weight:800;color:#3c2a56;min-height:44px;line-height:1.25;}
-.product-desc{font-size:.87rem;color:#555;min-height:38px;line-height:1.35;}
-.product-price{color:var(--pri);font-size:1.1rem;font-weight:800;}
+.product-img{width:100%;height:220px;object-fit:contain;border-bottom:2px solid var(--pri);}
+.product-info{padding:18px 16px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;}
+.product-name{font-size:1rem;font-weight:800;color:#3c2a56;min-height:44px;line-height:1.25;}
+.product-desc{font-size:.85rem;color:#555;min-height:38px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+.product-price{color:var(--pri);font-size:1.05rem;font-weight:800;}
 .delivery-charge{color:#15803d;font-weight:700;}
-.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.btn{padding:11px 16px;border-radius:12px;font-weight:800;font-size:.98rem;cursor:pointer;flex:1;display:flex;align-items:center;justify-content:center;gap:6px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25);border:none;transition:.2s transform;}
+.btn{padding:10px 14px;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;color:#fff;border:none;transition:.2s transform;flex:1;}
 .btn:active{transform:translateY(1px);}
 .btn-blue{background:var(--blue);}.btn-blue:hover{background:var(--blue-dark);}
 .btn-green{background:var(--green);}.btn-green:hover{background:var(--green-dark);}
 .btn-red{background:var(--red);}.btn-red:hover{background:var(--red-dark);}
 .btn-ghost{background:#f3f4f6;color:#111827;}.btn-ghost:hover{filter:brightness(.95);}
-#cartBtn{position:fixed;top:20px;right:20px;background:var(--blue);color:#fff;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;display:flex;justify-content:center;align-items:center;z-index:9999;box-shadow:0 8px 22px rgba(37,99,235,.35);}
-#cartCount{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;font-size:12px;font-weight:800;border-radius:50%;width:18px;height:18px;display:none;justify-content:center;align-items:center;}
-#cartPanel{position:fixed;top:80px;right:20px;width:320px;max-height:70vh;background:#fff;border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.2);padding:20px;overflow-y:auto;display:none;flex-direction:column;z-index:9998;}
+
+/* Cart */
+#cartBtn{position:fixed;top:20px;right:20px;background:var(--blue);color:#fff;border:none;border-radius:50%;width:50px;height:50px;font-size:22px;cursor:pointer;display:flex;justify-content:center;align-items:center;z-index:9999;box-shadow:0 6px 18px rgba(37,99,235,.35);}
+#cartCount{position:absolute;top:2px;right:2px;background:var(--red);color:#fff;font-size:11px;font-weight:800;border-radius:50%;width:18px;height:18px;display:none;justify-content:center;align-items:center;}
+#cartPanel{position:fixed;top:70px;right:10px;width:90%;max-width:360px;max-height:75vh;background:#fff;border-radius:20px;box-shadow:0 12px 35px rgba(0,0,0,.2);padding:15px;overflow-y:auto;display:none;flex-direction:column;z-index:9998;}
 #cartPanel h2{text-align:center;color:var(--pri-dark);margin-bottom:12px;}
-.cart-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:8px 0;}
-.cart-item-name{font-weight:700;color:#3c2a56;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.cart-item-price{font-weight:800;color:var(--pri);margin-left:10px;min-width:70px;text-align:right;}
-.cart-item-remove{background:transparent;border:none;color:var(--red);font-weight:900;font-size:20px;cursor:pointer;padding:0 6px;}
-#cartTotal{text-align:right;font-weight:900;font-size:1.15rem;color:var(--blue);margin:10px 0;}
-#closeCartBtn{background:var(--red);color:#fff;border:none;border-radius:14px;padding:10px 16px;cursor:pointer;font-weight:800;}
+.cart-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:6px 0;}
+.cart-item-name{font-weight:700;color:#3c2a56;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cart-item-price{font-weight:800;color:var(--pri);margin-left:5px;min-width:60px;text-align:right;}
+.cart-item-remove{background:transparent;border:none;color:var(--red);font-weight:900;font-size:18px;cursor:pointer;padding:0 4px;}
+#cartTotal{text-align:right;font-weight:900;font-size:1.1rem;color:var(--blue);margin:8px 0;}
+#closeCartBtn{background:var(--red);color:#fff;border:none;border-radius:14px;padding:8px 12px;cursor:pointer;font-weight:700;}
 #closeCartBtn:hover{background:var(--red-dark);}
-#toast{position:fixed;top:20px;right:20px;background:var(--blue);color:#fff;padding:14px 18px;border-radius:12px;font-weight:800;font-size:.98rem;opacity:0;pointer-events:none;transform:translateY(-20px);z-index:10000;box-shadow:0 8px 22px rgba(0,0,0,.18);}
+#toast{position:fixed;top:15px;right:15px;background:var(--blue);color:#fff;padding:12px 16px;border-radius:12px;font-weight:700;font-size:.9rem;opacity:0;pointer-events:none;transform:translateY(-20px);z-index:10000;box-shadow:0 6px 18px rgba(0,0,0,.18);}
 #toast.show{opacity:1;transform:translateY(0);}
+
+/* Image arrows */
 .img-arrow-left,.img-arrow-right{position:absolute;top:40%;background:#fff;border:none;padding:8px 10px;border-radius:50%;cursor:pointer;font-weight:bold;z-index:10;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);}
 .img-arrow-left{left:5px;} .img-arrow-right{right:5px;}
 .img-dots{display:flex;justify-content:center;gap:5px;margin-top:5px;}
 .img-dot{width:8px;height:8px;border-radius:50%;background:#ccc;cursor:pointer;}
 .img-dot.active{background:var(--pri);}
+
+/* Mobile specific adjustments */
+@media(max-width:768px){
+  .product-img{height:180px;} /* chhoti image */
+  .product-desc{-webkit-line-clamp:2;} /* 2 lines max */
+}
 </style>
 </head>
 <body>
@@ -149,7 +151,7 @@ async function fetchProducts(){
       <div style="position:relative;">
         <img src="${imgs[0]}" class="product-img" id="productImg-${docSnap.id}">
         ${imgs.length>1 ? '<button class="img-arrow-left">&#10094;</button><button class="img-arrow-right">&#10095;</button>':''}
-        <div class="img-dots">${imgs.map((_,i)=><div class="img-dot ${i===0?'active':''}"></div>).join('')}</div>
+        <div class="img-dots">${imgs.map((_,i)=>`<div class="img-dot ${i===0?'active':''}"></div>`).join('')}</div>
       </div>
       <div class="product-info">
         <div class="product-name">${data.name}</div>
@@ -159,7 +161,7 @@ async function fetchProducts(){
       </div>
     `;
     
-    const imgEl = card.querySelector(#productImg-${docSnap.id});
+    const imgEl = card.querySelector(`#productImg-${docSnap.id}`);
     const dots = Array.from(card.querySelectorAll('.img-dot'));
     if(imgs.length>1){
       card.querySelector('.img-arrow-left').onclick = ()=>{ currentImgIndex=(currentImgIndex-1+imgs.length)%imgs.length; imgEl.src=imgs[currentImgIndex]; dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active'); };
@@ -170,11 +172,11 @@ async function fetchProducts(){
       const editBtn = document.createElement('button'); editBtn.innerText='Edit'; editBtn.className='btn btn-blue';
       editBtn.onclick = () => { document.getElementById('productName').value = data.name; document.getElementById('productPrice').value = data.price; document.getElementById('productDesc').value = data.desc; document.getElementById('adminForm').style.display='block';
         const addForm = document.getElementById('addProductForm');
-        addForm.onsubmit = async e => { e.preventDefault(); const updatedName=document.getElementById('productName').value; const updatedPrice=parseInt(document.getElementById('productPrice').value); const updatedDesc=document.getElementById('productDesc').value; await updateDoc(doc(db,'products',docSnap.id),{name:updatedName,price:updatedPrice,desc:updatedDesc}); showToast(${updatedName} updated); addForm.reset(); fetchProducts(); };
+        addForm.onsubmit = async e => { e.preventDefault(); const updatedName=document.getElementById('productName').value; const updatedPrice=parseInt(document.getElementById('productPrice').value); const updatedDesc=document.getElementById('productDesc').value; await updateDoc(doc(db,'products',docSnap.id),{name:updatedName,price:updatedPrice,desc:updatedDesc}); showToast(`${updatedName} updated`); addForm.reset(); fetchProducts(); };
       };
       card.appendChild(editBtn);
       const delBtn = document.createElement('button'); delBtn.innerText='Delete'; delBtn.className='btn btn-red';
-      delBtn.onclick=async()=>{ await deleteDoc(doc(db,'products',docSnap.id)); showToast(${data.name} deleted); fetchProducts(); };
+      delBtn.onclick=async()=>{ await deleteDoc(doc(db,'products',docSnap.id)); showToast(`${data.name} deleted`); fetchProducts(); };
       card.appendChild(delBtn);
     }
 
@@ -183,7 +185,7 @@ async function fetchProducts(){
     card.appendChild(cartBtnEl);
 
     const buyNowBtn=document.createElement('button'); buyNowBtn.innerText='Buy Now'; buyNowBtn.className='btn btn-blue';
-    buyNowBtn.onclick=()=>window.open(`https://wa.me/923213838357?text=${encodeURIComponent(Hello! I want to buy "${data.name}" for Rs ${data.price}. Please confirm my order.)}`,"_blank");
+    buyNowBtn.onclick=()=>window.open(`https://wa.me/923213838357?text=${encodeURIComponent(`Hello! I want to buy "${data.name}" for Rs ${data.price}. Please confirm my order.`)}`,"_blank");
     card.appendChild(buyNowBtn);
 
     productsGrid.appendChild(card);
@@ -194,36 +196,13 @@ async function fetchProducts(){
 document.getElementById('searchBox').addEventListener('input',e=>{ const term=e.target.value.toLowerCase(); document.querySelectorAll('.product-card').forEach(card=>{ const pname=card.querySelector('.product-name').textContent.toLowerCase(); card.style.display=pname.includes(term)?'flex':'none'; }); });
 
 // Cart
-let cart=[];
-const cartBtn=document.getElementById('cartBtn');
-const cartPanel=document.getElementById('cartPanel');
-const cartItems=document.getElementById('cartItems');
-const cartTotal=document.getElementById('cartTotal');
-const closeCartBtn=document.getElementById('closeCartBtn');
-cartBtn.addEventListener('click',()=>cartPanel.style.display='flex');
-closeCartBtn.addEventListener('click',()=>cartPanel.style.display='none');
-function addToCart(product){cart.push(product);updateCartUI();showToast(${product.name} added to cart);}
-function removeFromCart(index){const removed=cart.splice(index,1)[0];updateCartUI();showToast(${removed.name} removed from cart);}
-function updateCartUI(){ cartItems.innerHTML=''; let total=0; cart.forEach((item,i)=>{ total+=item.price; const div=document.createElement('div'); div.className='cart-item'; div.innerHTML=<span class="cart-item-name">${item.name}</span><span class="cart-item-price">Rs ${item.price}</span><button class="cart-item-remove">&times;</button>; div.querySelector('.cart-item-remove').onclick=()=>removeFromCart(i); cartItems.appendChild(div); }); cartTotal.textContent=Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${total+deliveryCharge}; }
+let cart=[]; const cartBtn=document.getElementById('cartBtn'); const cartPanel=document.getElementById('cartPanel'); const cartItems=document.getElementById('cartItems'); const cartTotal=document.getElementById('cartTotal'); const closeCartBtn=document.getElementById('closeCartBtn'); cartBtn.addEventListener('click',()=>cartPanel.style.display='flex'); closeCartBtn.addEventListener('click',()=>cartPanel.style.display='none');
+function addToCart(product){cart.push(product);updateCartUI();showToast(`${product.name} added to cart`);}
+function removeFromCart(index){const removed=cart.splice(index,1)[0];updateCartUI();showToast(`${removed.name} removed from cart`);}
+function updateCartUI(){ cartItems.innerHTML=''; let total=0; cart.forEach((item,i)=>{ total+=item.price; const div=document.createElement('div'); div.className='cart-item'; div.innerHTML=`<span class="cart-item-name">${item.name}</span><span class="cart-item-price">Rs ${item.price}</span><button class="cart-item-remove">&times;</button>`; div.querySelector('.cart-item-remove').onclick=()=>removeFromCart(i); cartItems.appendChild(div); }); cartTotal.textContent=`Total: Rs ${total} + Delivery: Rs ${deliveryCharge} = Rs ${total+deliveryCharge}`; }
 
 // Add Product Form
-document.getElementById('addProductForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const name=document.getElementById('productName').value;
-  const price=parseInt(document.getElementById('productPrice').value);
-  const desc=document.getElementById('productDesc').value;
-  const images=document.getElementById('productImages').files;
-  if(images.length===0){showToast("Please select image");return;}
-  const imgDataArray=[];
-  for(let i=0;i<images.length;i++){
-    const reader=new FileReader();
-    await new Promise(resolve=>{ reader.onload=()=>{ imgDataArray.push(reader.result); resolve(); }; reader.readAsDataURL(images[i]); });
-  }
-  await addDoc(collection(db,'products'),{name,price,desc,imgs:imgDataArray});
-  showToast(${name} added successfully);
-  e.target.reset();
-  fetchProducts();
-});
+document.getElementById('addProductForm').addEventListener('submit',async e=>{ e.preventDefault(); const name=document.getElementById('productName').value; const price=parseInt(document.getElementById('productPrice').value); const desc=document.getElementById('productDesc').value; const images=document.getElementById('productImages').files; if(images.length===0){showToast("Please select image");return;} const imgDataArray=[]; for(let i=0;i<images.length;i++){ const reader=new FileReader(); await new Promise(resolve=>{ reader.onload=()=>{ imgDataArray.push(reader.result); resolve(); }; reader.readAsDataURL(images[i]); }); } await addDoc(collection(db,'products'),{name,price,desc,imgs:imgDataArray}); showToast(`${name} added successfully`); e.target.reset(); fetchProducts(); });
 
 // Initial fetch
 fetchProducts();
