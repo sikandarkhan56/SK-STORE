@@ -17,13 +17,10 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 #adminBar .tag{background:#f3e8ff;color:var(--pri-dark);padding:8px 12px;border-radius:999px;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;gap:6px;}
 #adminBar button{background:var(--pri);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;}
 #adminBar button:hover{background:var(--pri-dark);transform:translateY(-1px);}
-
-/* Products grid */
 .products-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
 @media(max-width:1200px){ .products-grid{grid-template-columns:repeat(3,1fr);} }
 @media(max-width:992px){ .products-grid{grid-template-columns:repeat(2,1fr);} }
-@media(max-width:768px){ .products-grid{grid-template-columns:repeat(2,1fr);} } /* Mobile 2 per row */
-
+@media(max-width:768px){ .products-grid{grid-template-columns:repeat(2,1fr);} } 
 .product-card{background:#fff;border-radius:16px;box-shadow:0 7px 20px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .3s ease, box-shadow .3s ease;overflow:hidden;position:relative;}
 .product-card:hover{transform:translateY(-6px);box-shadow:0 14px 35px rgba(0,0,0,.12);}
 .product-img{width:100%;height:180px;object-fit:contain;border-bottom:2px solid var(--pri);}
@@ -38,8 +35,6 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 .btn-green{background:var(--green);}.btn-green:hover{background:var(--green-dark);}
 .btn-red{background:var(--red);}.btn-red:hover{background:var(--red-dark);}
 .btn-ghost{background:#f3f4f6;color:#111827;}.btn-ghost:hover{filter:brightness(.95);}
-
-/* Cart */
 #cartBtn{position:fixed;top:20px;right:20px;background:var(--blue);color:#fff;border:none;border-radius:50%;width:50px;height:50px;font-size:22px;cursor:pointer;display:flex;justify-content:center;align-items:center;z-index:9999;box-shadow:0 6px 18px rgba(37,99,235,.35);}
 #cartCount{position:absolute;top:2px;right:2px;background:var(--red);color:#fff;font-size:11px;font-weight:800;border-radius:50%;width:18px;height:18px;display:none;justify-content:center;align-items:center;}
 #cartPanel{position:fixed;top:70px;right:10px;width:90%;max-width:360px;max-height:75vh;background:#fff;border-radius:20px;box-shadow:0 12px 35px rgba(0,0,0,.2);padding:15px;overflow-y:auto;display:none;flex-direction:column;z-index:9998;}
@@ -53,13 +48,16 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 #closeCartBtn:hover{background:var(--red-dark);}
 #toast{position:fixed;top:15px;right:15px;background:var(--blue);color:#fff;padding:12px 16px;border-radius:12px;font-weight:700;font-size:.9rem;opacity:0;pointer-events:none;transform:translateY(-20px);z-index:10000;box-shadow:0 6px 18px rgba(0,0,0,.18);}
 #toast.show{opacity:1;transform:translateY(0);}
-
-/* Image arrows */
 .img-arrow-left,.img-arrow-right{position:absolute;top:40%;background:#fff;border:none;padding:8px 10px;border-radius:50%;cursor:pointer;font-weight:bold;z-index:10;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.2);}
 .img-arrow-left{left:5px;} .img-arrow-right{right:5px;}
 .img-dots{display:flex;justify-content:center;gap:5px;margin-top:5px;}
 .img-dot{width:8px;height:8px;border-radius:50%;background:#ccc;cursor:pointer;}
 .img-dot.active{background:var(--pri);}
+
+/* Mobile hide description and more button */
+@media (max-width: 768px) {
+  .product-desc, .more-less-btn { display: none; }
+}
 </style>
 </head>
 <body>
@@ -90,7 +88,7 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 <button id="adminLoginBtn" class="btn btn-blue" style="position:fixed; top:90px; right:20px; z-index:10000;">Admin Login</button>
 
 <script type="module">
-// Firebase imports and config
+// Firebase imports and setup
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -137,10 +135,10 @@ async function fetchProducts(){
     const data = docSnap.data();
     const card = document.createElement('div');
     card.className='product-card';
-    
+
     const imgs = data.imgs && data.imgs.length ? data.imgs : [''];
     let currentImgIndex = 0;
-    
+
     card.innerHTML = `
       <div style="position:relative;">
         <img src="${imgs[0]}" class="product-img" id="productImg-${docSnap.id}">
@@ -149,8 +147,7 @@ async function fetchProducts(){
       </div>
       <div class="product-info">
         <div class="product-name">${data.name}</div>
-        <div class="product-desc" id="desc-${docSnap.id}">${data.desc.length>100?data.desc.slice(0,100)+'...':data.desc}</div>
-        ${data.desc.length>100?`<button class="btn btn-ghost" id="more-${docSnap.id}">More</button>`:''}
+        <div class="product-desc">${data.desc}</div>
         <div class="product-price">Rs ${data.price}</div>
         <div class='delivery-charge'>Delivery: Rs ${deliveryCharge}</div>
       </div>
@@ -182,17 +179,6 @@ async function fetchProducts(){
     const buyNowBtn=document.createElement('button'); buyNowBtn.innerText='Buy Now'; buyNowBtn.className='btn btn-blue';
     buyNowBtn.onclick=()=>window.open(`https://wa.me/923213838357?text=${encodeURIComponent(`Hello! I want to buy "${data.name}" for Rs ${data.price}. Please confirm my order.`)}`,"_blank");
     card.appendChild(buyNowBtn);
-
-    // More / Less toggle
-    if(data.desc.length>100){
-      const moreBtn = card.querySelector(`#more-${docSnap.id}`);
-      const descEl = card.querySelector(`#desc-${docSnap.id}`);
-      let expanded = false;
-      moreBtn.onclick = ()=> {
-        if(!expanded){ descEl.textContent = data.desc; moreBtn.textContent='Less'; expanded=true; } 
-        else { descEl.textContent = data.desc.slice(0,100)+'...'; moreBtn.textContent='More'; expanded=false; }
-      };
-    }
 
     productsGrid.appendChild(card);
   });
