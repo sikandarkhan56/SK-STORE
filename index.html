@@ -22,7 +22,7 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 .products-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
 @media(max-width:1200px){ .products-grid{grid-template-columns:repeat(3,1fr);} }
 @media(max-width:992px){ .products-grid{grid-template-columns:repeat(2,1fr);} }
-@media(max-width:768px){ .products-grid{grid-template-columns:repeat(2,1fr);} } /* Mobile 2 per row */
+@media(max-width:768px){ .products-grid{grid-template-columns:repeat(2,1fr);} }
 
 .product-card{background:#fff;border-radius:16px;box-shadow:0 7px 20px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .3s ease, box-shadow .3s ease;overflow:hidden;position:relative;}
 .product-card:hover{transform:translateY(-6px);box-shadow:0 14px 35px rgba(0,0,0,.12);}
@@ -60,6 +60,7 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 .img-dots{display:flex;justify-content:center;gap:5px;margin-top:5px;}
 .img-dot{width:8px;height:8px;border-radius:50%;background:#ccc;cursor:pointer;}
 .img-dot.active{background:var(--pri);}
+.desc-toggle{color:var(--blue);cursor:pointer;font-weight:700;}
 </style>
 </head>
 <body>
@@ -90,7 +91,7 @@ h1{font-weight:900;font-size:2.4rem;margin-bottom:12px;color:var(--pri-dark);tex
 <button id="adminLoginBtn" class="btn btn-blue" style="position:fixed; top:90px; right:20px; z-index:10000;">Admin Login</button>
 
 <script type="module">
-// Firebase imports and config
+// Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -149,12 +150,16 @@ async function fetchProducts(){
       </div>
       <div class="product-info">
         <div class="product-name">${data.name}</div>
-        <div class="product-desc">${data.desc}</div>
+        <div class="product-desc" id="desc-${docSnap.id}">
+          ${data.desc.length > 100 ? data.desc.slice(0, 100) + '...' : data.desc}
+        </div>
+        ${data.desc.length > 100 ? `<span class="desc-toggle" id="toggle-${docSnap.id}">More</span>` : ''}
         <div class="product-price">Rs ${data.price}</div>
         <div class='delivery-charge'>Delivery: Rs ${deliveryCharge}</div>
       </div>
     `;
-    
+
+    // Image arrows
     const imgEl = card.querySelector(`#productImg-${docSnap.id}`);
     const dots = Array.from(card.querySelectorAll('.img-dot'));
     if(imgs.length>1){
@@ -162,11 +167,37 @@ async function fetchProducts(){
       card.querySelector('.img-arrow-right').onclick = ()=>{ currentImgIndex=(currentImgIndex+1)%imgs.length; imgEl.src=imgs[currentImgIndex]; dots.forEach(d=>d.classList.remove('active')); dots[currentImgIndex].classList.add('active'); };
     }
 
+    // More / Less toggle
+    if(data.desc.length > 100){
+      const toggleBtn = card.querySelector(`#toggle-${docSnap.id}`);
+      const descEl = card.querySelector(`#desc-${docSnap.id}`);
+      let expanded = false;
+      toggleBtn.onclick = () => {
+        expanded = !expanded;
+        descEl.textContent = expanded ? data.desc : data.desc.slice(0,100)+'...';
+        toggleBtn.textContent = expanded ? 'Less' : 'More';
+      }
+    }
+
+    // Admin Edit/Delete
     if(currentUser){
       const editBtn = document.createElement('button'); editBtn.innerText='Edit'; editBtn.className='btn btn-blue';
-      editBtn.onclick = () => { document.getElementById('productName').value = data.name; document.getElementById('productPrice').value = data.price; document.getElementById('productDesc').value = data.desc; document.getElementById('adminForm').style.display='block';
+      editBtn.onclick = () => { 
+        document.getElementById('productName').value = data.name; 
+        document.getElementById('productPrice').value = data.price; 
+        document.getElementById('productDesc').value = data.desc; 
+        document.getElementById('adminForm').style.display='block';
         const addForm = document.getElementById('addProductForm');
-        addForm.onsubmit = async e => { e.preventDefault(); const updatedName=document.getElementById('productName').value; const updatedPrice=parseInt(document.getElementById('productPrice').value); const updatedDesc=document.getElementById('productDesc').value; await updateDoc(doc(db,'products',docSnap.id),{name:updatedName,price:updatedPrice,desc:updatedDesc}); showToast(`${updatedName} updated`); addForm.reset(); fetchProducts(); };
+        addForm.onsubmit = async e => { 
+          e.preventDefault(); 
+          const updatedName=document.getElementById('productName').value; 
+          const updatedPrice=parseInt(document.getElementById('productPrice').value); 
+          const updatedDesc=document.getElementById('productDesc').value; 
+          await updateDoc(doc(db,'products',docSnap.id),{name:updatedName,price:updatedPrice,desc:updatedDesc}); 
+          showToast(`${updatedName} updated`); 
+          addForm.reset(); 
+          fetchProducts(); 
+        };
       };
       card.appendChild(editBtn);
       const delBtn = document.createElement('button'); delBtn.innerText='Delete'; delBtn.className='btn btn-red';
@@ -174,6 +205,7 @@ async function fetchProducts(){
       card.appendChild(delBtn);
     }
 
+    // Cart buttons
     const cartBtnEl=document.createElement('button'); cartBtnEl.innerText='Add to Cart'; cartBtnEl.className='btn btn-green';
     cartBtnEl.onclick=()=>addToCart({name:data.name,price:data.price});
     card.appendChild(cartBtnEl);
